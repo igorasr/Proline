@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Jobs\ProcessUploadChunkJob;
 use App\Models\UploadHistory;
 use Illuminate\Bus\Batch;
 use Illuminate\Support\Facades\Bus;
@@ -11,56 +12,30 @@ use Throwable;
 
 class UploadService
 {
-  private function dispatchChunks(array $chunks, UploadHistory $import): void
+  private function dispatchChunks(array $entries, UploadHistory $import): void
   {
     $jobs = [];
-    // foreach ($chunks as $index => $chunk) {
-    //     $jobs[] = new ProcessImportChunkJob($import->id, $chunk);
-    // }
+    foreach ($entries as $modelName => $entry) {
+      $jobs[] = new ProcessUploadChunkJob($import->id, $modelName, $entry);
+    }
 
     $batch = Bus::batch($jobs)
       ->name("import:{$import->id}")
-      ->then(function (Batch $batch) use ($import) {
-        // all jobs successful
-        try {
-          $import->refresh();
-          $import->markSuccess();
-          $import->logs()->create([
-            'level' => 'info',
-            'message' => 'Import finished successfully.',
-            'context' => json_encode(['batch_id' => $batch->id])
-          ]);
-        } catch (Throwable $e) {
-          Log::error('Error marking import success: ' . $e->getMessage(), ['import_id' => $import->id]);
-        }
+      ->then(function (Batch $batch) use ($import){
+        // TODO: All jobs completed successfully...
       })
-      ->catch(function (Batch $batch, Throwable $e) use ($import) {
-        // batch had a failure
-        $import->markError($e->getMessage());
-        $import->logs()->create([
-          'level' => 'error',
-          'message' => 'Batch failed: ' . $e->getMessage(),
-          'context' => json_encode(['batch_id' => $batch->id, 'trace' => $e->getTraceAsString()]),
-        ]);
-        Log::error('Import batch failed', ['import_id' => $import->id, 'error' => $e->getMessage()]);
+      ->catch(function (Batch $batch, Throwable $e) use ($import){
+        // TODO: First batch job failure detected...
       })
       ->finally(function (Batch $batch) use ($import) {
-        // called always: update processed count from DB (defensive)
+
         $import->refresh();
       })
+      ->allowFailures()
       ->dispatch();
-
-    // mark processing after dispatch
-    $import->markProcessing();
-
-    // $import->logs()->create([
-    //   'level' => 'info',
-    //   'message' => 'Import queued.',
-    //   'context' => json_encode(['batch_id' => $batch->id ?? null, 'chunks' => count($jobs)])
-    // ]);
   }
 
-  public function create(string $filepath, string $originalName, int $chunkSize = 500): UploadHistory
+  public function create(string $filepath, string $originalName): UploadHistory
   {
     // Read file and decode JSON to count items (we assume it's an array at top-level)
     $content = Storage::get($filepath);
@@ -81,14 +56,13 @@ class UploadService
       'meta' => ['path' => $filepath],
     ]);
 
-    // split in chunks
-    $chunks = array_chunk($data, $chunkSize);
+    $this->dispatchChunks($data, $import);
 
-    $this->dispatchChunks($chunks, $import);
 
     return $import;
   }
 
+  // Method not in use
   public function reprocess(UploadHistory $import, int $chunkSize = 500): UploadHistory
   {
     // reuse the stored file path
@@ -114,7 +88,7 @@ class UploadService
 
     // dispatch batch as in createAndDispatch but with same import
     $chunks = array_chunk($data, $chunkSize);
-    
+
     $this->dispatchChunks($chunks, $import);
 
     return $import;

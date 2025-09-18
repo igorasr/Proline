@@ -5,7 +5,7 @@ namespace App\Models;
 use App\Casts\CoordinatesCast;
 use Illuminate\Database\Eloquent\Model;
 
-class TimeTrackingEvents extends Model
+class TimeTrackingEvent extends Model
 {
     protected $table = 'tb_time_tracking_events';
 
