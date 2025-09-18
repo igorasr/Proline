@@ -17,7 +17,7 @@ services:
     image: redis:alpine
     container_name: proline_cache
     ports:
-      - "6380:6379"
+      - "6379:6379"
     restart: unless-stopped
     networks:
         - internal
@@ -37,7 +37,7 @@ services:
       - internal
 
   proline_db:
-      image: mysql:8.0
+      image: mysql/mysql-server:8.0
       container_name: proline_db
       restart: always
       environment:
@@ -46,13 +46,19 @@ services:
             MYSQL_DATABASE: '${DB_DATABASE}'
             MYSQL_USER: '${DB_USERNAME}'
             MYSQL_PASSWORD: '${DB_PASSWORD}'
-            MYSQL_ALLOW_EMPTY_PASSWORD: 1
       ports:
         - "3306:3306"
-      volumes:
-        - db_data:/var/lib/mysql
       networks:
         - internal
+      volumes:
+        - db_data:/var/lib/mysql
+      healthcheck:
+        test:
+          - CMD
+          - mysqladmin
+          - ping
+          - '-p${DB_PASSWORD}'
+        timeout: 5s
 
 networks:
   internal:
@@ -60,3 +66,4 @@ networks:
 
 volumes:
   db_data:
+    driver: local

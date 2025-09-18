@@ -30,3 +30,10 @@ COPY . .
 EXPOSE 9000
 
 CMD ["/usr/bin/supervisord", "-n", "-c", "/etc/supervisor/supervisord.conf"]
+
+# Copiar o script de inicialização para dentro do container
+COPY ./docker/init.sh /usr/local/bin/init.sh
+RUN chmod +x /usr/local/bin/init.sh
+
+# Definir o entrypoint
+ENTRYPOINT ["/usr/local/bin/init.sh"]
