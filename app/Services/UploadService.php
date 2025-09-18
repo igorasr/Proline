@@ -71,14 +71,9 @@ class UploadService
       throw new \RuntimeException('Arquivo original não encontrado para reprocessamento.');
     }
 
-    // optional: clear logs and reset counters
-    $import->logs()->create([
-      'level' => 'info',
-      'message' => 'Reprocess triggered.'
-    ]);
-
     $content = Storage::get($path);
     $data = json_decode($content, true);
+
     if (!is_array($data)) {
       throw new \RuntimeException("Arquivo JSON inválido no reprocessamento.");
     }
@@ -86,10 +81,7 @@ class UploadService
     // reset status/counters
     $import->update(['status' => 'pending', 'total_items' => count($data), 'processed_items' => 0, 'error_message' => null]);
 
-    // dispatch batch as in createAndDispatch but with same import
-    $chunks = array_chunk($data, $chunkSize);
-
-    $this->dispatchChunks($chunks, $import);
+    $this->dispatchChunks($data, $import);
 
     return $import;
   }
