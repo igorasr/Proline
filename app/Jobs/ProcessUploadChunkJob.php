@@ -10,6 +10,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\DB;
 use Throwable;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -21,7 +22,7 @@ class ProcessUploadChunkJob implements ShouldQueue
     public int $importId;
     public array $chunk;
     public string $modelName;
-    public $timeout = 3600;
+    public $timeout = 10000000;
 
     public function __construct(int $importId, string $modelName, array $entries)
     {
@@ -53,12 +54,17 @@ class ProcessUploadChunkJob implements ShouldQueue
 
             $model = app($class);
             
-            foreach ($this->chunk as $item) {
-                $model::create($item);
-                $import->increment('processed_items');
-            }
+            DB::beginTransaction();
+            $model::insert($this->chunk);
+            $import->increment('processed_items', count($this->chunk));
+            DB::commit();
+
+
         } catch (Throwable $e) {
             Log::error('Chunk processing failed', ['import_id'=>$this->importId,'error'=>$e->getMessage()]);
+            throw $e;
+        } catch (\PDOException $e){
+            Log::error('Database error during chunk processing', ['import_id'=>$this->importId,'error'=>$e->getMessage()]);
             throw $e;
         }
     }

@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\UploadStatus;
 use App\Jobs\ProcessUploadChunkJob;
 use App\Models\UploadHistory;
 use Illuminate\Bus\Batch;
@@ -22,13 +23,12 @@ class UploadService
     $batch = Bus::batch($jobs)
       ->name("import:{$import->id}")
       ->then(function (Batch $batch) use ($import){
-        // TODO: All jobs completed successfully...
+        $import->markSuccess();
       })
       ->catch(function (Batch $batch, Throwable $e) use ($import){
-        // TODO: First batch job failure detected...
+        $import->markError();
       })
       ->finally(function (Batch $batch) use ($import) {
-
         $import->refresh();
       })
       ->allowFailures()
@@ -50,14 +50,13 @@ class UploadService
       'filename' => $originalName,
       'mime' => 'application/json',
       'size' => Storage::size($filepath),
-      'status' => 'pending',
+      'status' => UploadStatus::PENDING->value,
       'total_items' => $total,
       'processed_items' => 0,
       'meta' => ['path' => $filepath],
     ]);
 
     $this->dispatchChunks($data, $import);
-
 
     return $import;
   }
