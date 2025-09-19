@@ -58,9 +58,9 @@ services:
             - mysql
       healthcheck:
         test: ["CMD", "mysqladmin", "ping", "-p${DB_PASSWORD}"]
-        interval: 1m
+        interval: 30s
         retries: 5
-        start_period: 60s
+        start_period: 30s
 
 networks:
   internal:

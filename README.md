@@ -1,5 +1,11 @@
 ### Proline Interview Project
 
+**Pré-requisitos:**  
+- Docker instalado  
+- Composer instalado  
+- Node.js (v20+) e npm instalados  
+- Laravel Sail configurado
+
 #### Como rodar o projeto
 
 1. Instale as dependências do projeto:
@@ -25,13 +31,8 @@
   docker exec -it proline_api php artisan migrate
   ```
 
-5. Aguarde todos os serviços subirem e acesse o projeto em `http://localhost:8080/app/envios` no seu navegador.
+5. Aguarde todos os serviços subirem e acesse o projeto em `http://localhost:8080/app/envio` no seu navegador.
 
-**Pré-requisitos:**  
-- Docker instalado  
-- Composer instalado  
-- Node.js e npm instalados  
-- Laravel Sail configurado
 
 ### Arquivo para teste
 
