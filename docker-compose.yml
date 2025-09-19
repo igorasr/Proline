@@ -10,8 +10,10 @@ services:
       networks:
         - internal
       depends_on:
-        - proline_cache
-        - proline_db
+        proline_cache:
+          condition: service_started
+        proline_db:
+          condition: service_healthy
 
   proline_cache:
     image: redis:alpine
@@ -47,7 +49,7 @@ services:
             MYSQL_USER: '${DB_USERNAME}'
             MYSQL_PASSWORD: '${DB_PASSWORD}'
       ports:
-        - "3306:3306"
+        - "3306"
       networks:
         - internal
       volumes:
@@ -58,7 +60,9 @@ services:
           - mysqladmin
           - ping
           - '-p${DB_PASSWORD}'
+        interval: 5s
         timeout: 5s
+        retries: 0
 
 networks:
   internal:

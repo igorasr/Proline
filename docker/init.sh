@@ -30,3 +30,4 @@ else
 fi
 
 echo "[INFO] Inicialização concluída"
+exec "$@"
