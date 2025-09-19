@@ -39,9 +39,9 @@ class UploadController extends Controller
     }
 
     // // reprocess
-    // public function reprocess(Import $import): JsonResponse
-    // {
-    //     $this->service->reprocess($import);
-    //     return response()->json(['id'=>$import->id,'status'=>$import->status]);
-    // }
+    public function reprocess(UploadHistory $import): JsonResponse
+    {
+        $this->service->reprocess($import);
+        return response()->json(['id'=>$import->id,'status'=>$import->status]);
+    }
 }

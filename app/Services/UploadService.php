@@ -62,7 +62,7 @@ class UploadService
   }
 
   // Method not in use
-  public function reprocess(UploadHistory $import, int $chunkSize = 500): UploadHistory
+  public function reprocess(UploadHistory $import): UploadHistory
   {
     // reuse the stored file path
     $path = $import->meta['path'] ?? null;

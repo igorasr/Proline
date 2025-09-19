@@ -23,19 +23,27 @@
                     hover:bg-gray-50 transition-colors"
             >
               <div class="flex flex-col">
-                <span class="text-sm text-gray-500">Protocolo</span>
-                <strong class="text-lg text-gray-800">#{{ item.id }}</strong>
-                <StatusComponent :status="item.status" />
+                <span class="text-sm text-gray-500">Upload</span>
+                <div class="flex items-center gap-2">
+                  <strong class="text-lg text-gray-800">#{{ item.id }}</strong>
+                  <StatusComponent :status="item.status" />
+                </div>
               </div>
 
-              <button
-                @click="toggleSelected(item.id)"
-                class="px-4 py-2 text-sm font-medium rounded-md
-                      bg-blue-600 text-white hover:bg-blue-700
-                      focus:outline-none focus:ring-2 focus:ring-blue-500"
+              <div class="flex items-center gap-2">
+                <button
+                  class="cursor-pointer"
+                  @click="toggleSelected(item.id)"
               >
-                {{ selectedId === item.id ? 'Fechar' : 'Ver Detalhes' }}
+                <Library class="size-4 text-sm text-gray-500 "/>
               </button>
+              <button
+                class="cursor-pointer"
+                @click="reprocessar(item.id)"
+              >
+                <RefreshCcw class="size-4 text-sm text-gray-500"/>
+              </button>
+              </div>
             </div>
 
             <transition name="accordion">
@@ -56,10 +64,10 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
-import DetalheEnvio from '../Components/DetalheEnvio.vue'
 import HttpClient from '../Services/HttpClient'
 import BaseLayout from '../Layouts/BaseLayout.vue'
 import StatusComponent from '../Components/StatusComponent.vue'
+import { Library, RefreshCcw } from 'lucide-vue-next'
 
 const envios = ref([])
 const selectedId = ref(null)
@@ -71,15 +79,12 @@ async function fetchUploads() {
   envios.value = data
 }
 
-function setSelectedItem(item) {
-  detalhe.value = item
-}
 function toggleSelected(id) {
   selectedId.value = selectedId.value === id ? null : id
 }
 
 async function reprocessar(id) {
-  await axios.post(`/api/uploads/${id}/reprocess`)
+  await HttpClient.post(`/upload/${id}/reprocess`)
   fetchUploads()
 }
 
