@@ -37,3 +37,5 @@
 ### Arquivo para teste
 
 O Arquivo JSON disponibilizado via e-mail se encontra na raiz do projeto com nome `proline.json`
+
+Preview do projeto rodando em `public/internal/proline.gif`
