@@ -31,7 +31,6 @@ class UploadService
       ->finally(function (Batch $batch) use ($import) {
         $import->refresh();
       })
-      ->allowFailures()
       ->dispatch();
   }
 
@@ -77,7 +76,6 @@ class UploadService
       throw new \RuntimeException("Arquivo JSON inválido no reprocessamento.");
     }
 
-    // reset status/counters
     $import->update(['status' => 'pending', 'total_items' => count($data), 'processed_items' => 0, 'error_message' => null]);
 
     $this->dispatchChunks($data, $import);

@@ -54,12 +54,12 @@ class ProcessUploadChunkJob implements ShouldQueue
 
             $model = app($class);
             
-            DB::beginTransaction();
-            $model::insert($this->chunk);
-            $import->increment('processed_items', count($this->chunk));
-            DB::commit();
-
-
+            // Insert in smaller batches to avoid "MySQL server has gone away"
+            $batchSize = 100;
+            foreach (array_chunk($this->chunk, $batchSize) as $batch) {
+                $model::insert($batch);
+                $import->increment('processed_items', count($batch));
+            }
         } catch (Throwable $e) {
             Log::error('Chunk processing failed', ['import_id'=>$this->importId,'error'=>$e->getMessage()]);
             throw $e;
